@@ -16,6 +16,8 @@ public class WebSecurityConfig {
             .csrf(csrf -> csrf.disable())  // 최신 방식으로 CSRF 설정
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/users/signup").permitAll()
+                // Swagger UI 접근 허용
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
             );
         
