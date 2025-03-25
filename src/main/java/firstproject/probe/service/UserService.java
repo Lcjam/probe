@@ -2,8 +2,8 @@ package firstproject.probe.service;
 
 import firstproject.probe.dto.SignupRequest;
 import firstproject.probe.dto.UserResponse;
-import firstproject.probe.mapper.UserMapper;
 import firstproject.probe.model.User;
+import firstproject.probe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,18 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
     
-    private final UserMapper userMapper;
+    // MyBatis Mapper 의존성 제거
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     
     @Transactional
     public UserResponse signup(SignupRequest request) {
-        // 사용자명 중복 확인
-        if (userMapper.existsByUsername(request.getUsername())) {
+        // JPA를 사용한 중복 확인
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("이미 사용중인 사용자명입니다");
         }
         
-        // 이메일 중복 확인
-        if (userMapper.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 사용중인 이메일입니다");
         }
         
@@ -37,7 +37,8 @@ public class UserService {
                 .isOnboardingCompleted(false)
                 .build();
         
-        userMapper.insert(user);
+        // JPA를 사용하여 사용자 저장
+        user = userRepository.save(user);
         
         return UserResponse.builder()
                 .id(user.getId())
