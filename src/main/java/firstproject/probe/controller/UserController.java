@@ -3,6 +3,7 @@ package firstproject.probe.controller;
 import firstproject.probe.dto.SignupRequest;
 import firstproject.probe.dto.UserResponse;
 import firstproject.probe.service.UserService;
+import firstproject.probe.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,15 +14,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@Tag(name = "사용자 관리", description = "사용자 회원가입, 로그인 등의 API")
+@Tag(name = "사용자 관리", description = "사용자 회원가입, 탈퇴 등의 API")
 public class UserController {
     
     private final UserService userService;
@@ -37,5 +36,17 @@ public class UserController {
     public ResponseEntity<UserResponse> signup(@Valid @RequestBody SignupRequest request) {
         UserResponse response = userService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "회원 탈퇴", description = "현재 로그인한 사용자의 계정을 삭제합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "탈퇴 성공"),
+        @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<Void> withdraw(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        userService.withdraw(userPrincipal.getId());
+        return ResponseEntity.ok().build();
     }
 }

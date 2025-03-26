@@ -2,6 +2,8 @@ package firstproject.probe.service;
 
 import firstproject.probe.dto.SignupRequest;
 import firstproject.probe.dto.UserResponse;
+import firstproject.probe.exception.DuplicateResourceException;
+import firstproject.probe.exception.ResourceNotFoundException;
 import firstproject.probe.model.User;
 import firstproject.probe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,19 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
     
-    // MyBatis Mapper 의존성 제거
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     
     @Transactional
     public UserResponse signup(SignupRequest request) {
-        // JPA를 사용한 중복 확인
+        // 사용자명 중복 체크
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("이미 사용중인 사용자명입니다");
+            throw new DuplicateResourceException("이미 사용 중인 사용자명입니다.");
         }
         
+        // 이메일 중복 체크
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("이미 사용중인 이메일입니다");
+            throw new DuplicateResourceException("이미 사용 중인 이메일입니다.");
         }
         
         // 비밀번호 암호화 및 사용자 생성
@@ -37,7 +39,7 @@ public class UserService {
                 .isOnboardingCompleted(false)
                 .build();
         
-        // JPA를 사용하여 사용자 저장
+        // 사용자 저장
         user = userRepository.save(user);
         
         return UserResponse.builder()
@@ -47,5 +49,14 @@ public class UserService {
                 .isFirstLogin(user.isFirstLogin())
                 .isOnboardingCompleted(user.isOnboardingCompleted())
                 .build();
+    }
+
+    @Transactional
+    public void withdraw(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."));
+        
+        // 연관된 데이터들은 DB의 CASCADE 설정에 의해 자동으로 삭제됨
+        userRepository.delete(user);
     }
 }
