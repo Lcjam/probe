@@ -91,6 +91,12 @@ probe/
                 └── probe/
                     ├── config/     # 설정 파일
                     ├── controller/ # API 컨트롤러
+                    ├── dto       
+                    ├── exception
+                    ├── mapper
+                    ├── model
+                    ├── repository
+                    ├── security
                     ├── service/    # 비즈니스 로직
                     └── model/      # 데이터 모델
 ```
